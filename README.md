@@ -1,76 +1,42 @@
-# Automatization to Replicate Parameters in the Parameter Store into another Region either at the moment of Creation or thru an Event Schedule Rule in CloudWatch:
-This is an open-source solution to deploy **AutoReplication** using `CloudTrail` and route the deployemnt event through `Cloudwatch Events`, and `EventBrigdge`,` across regions if it is the case to an endpoint - a `lambda function` to `replicate parameters` at the moment of creation or thru a scheduled event in CloudWatch. Hence a Parameter created in a central paramter store, say in US-EAST-1 it is replicated in US-EAST-2. If is already in existence in US-EAST-2 then it is updated.
+# Replicate Parameter Store Entries into another Regions using an automated workflow:
+This is an open-source solution to deploy **AutoReplication** of Parameter Store Entries using `CloudTrail` and route the deployment event through `Cloudwatch Events`, and `EventBrigdge`,` across regions if it is the case to an endpoint - a `lambda function` to `replicate parameter entries` at the moment of creation or thru a scheduled event in CloudWatch which rewrites the value. 
+Hence an Entry created in a central parameter store, say in US-EAST-1, it is replicated in US-EAST-2. If it is already in existence in US-EAST-2 then it is updated.
 
 ### PreFlight Check
 1. Intermedial to advance level in Python. So, you can adapt and customized the `auto-replicate-parameter-store.py` files to your need an use cases.
-2. Basic to intermedial level in json to edit json policies in `EventBridge Rules` to change the rules and policies to the needs of your use cases since we have not cover every single resource in AWS.
-3. One AWS Region known as the "the Central or *Receiver Region"* to deploy the parameters to be replicated. Here is where we deploy **AutoTagging Lambda function**.
-6. In Every other linked/ sender  account included in your organization will need the following
-    A. `Cloudwatch` log group collecting `cloudtrail` for every region.
-    B. `Eventbridge` rules for every region for Receiver account and Linked Accounts in order to create a pipeline to pass the create events from the source region in any linked account to the lambda function in us-east-1 in central or receiving account.
+2. Basic to intermedial level in json to edit json rules in `EventBridge Rules` to modify it if needed to your use case, since we give granular limited access to AWS resources.
+3. One AWS Region known as the "the Central or *Receiver Region"* to deploy the parameters to be replicated. Here is where we deploy **auto-replicate-parameter-store**.
+6. In the designated Central Region you choose for the Parameter Store Entries you will need the following
+    A. `Eventbridge` rules in the central region in order to pass the "PutParameter" events from `cloudtrail` to the lambda function as an endpoint.
 
-## List of AWS Resources included in the Auto-tagging workflow
+## List of AWS Resources used in the Auto Replicate Parameter Entries workflow
 1. IAM
-2. EC2
-3. S3
-4. SNS Topics
-5. SQS
-6. CloudTrail
-7. Cloudwatch Logs
-8. CodePipeline
-9. CodeBuild
-10. CloudFormation 
-11. MediaStore
-12. Resource Group Tagging
-13. Tag Editor
+2. Lambda
+3. CloudWatch
+4. CloudTrail
+5. SSM Parameter Store
 
-More Auto-Tagging for AWS Services coming!!!
+## List of Programming languages used
+1. Python 3.9
 
-### Two AWS Accounts subscribed to an Organization
-**A Receiver/Central AWS Account**
-One existing AWS account attached to and organization used to deploy the auto tagging lambda function in us-east-1 as endpoint and that for the purpose of this project its Id will be 111111111111
+## Required IAM Roles and Policies
+In this case `Identity and Access Management (IAM)` is a global element, so do not worry in what region you are in at the moment of loggin in. Though some AWS Services are global like this one and `S3` some others like `EventBridge`, `CloudWatch`, and `Lambda` is regional; therefore, be sure you are in us-east-1 (N. Virginia) for most of the purposes of this project. 
+We need one role **auto-replicate-parameter-store-role** with limited granular permissions to interact with other AWS Services such as: IAM, KMS, EC2, SSM, CloudWatch Logs for this project
 
-**A Sender/linked AWS Account**
-A Second existing AWS account with Id 222222222222 and that is attached to the same organization than Receiver Account. We all intents and purposes of this demo we are going to deploy AWS resources in us-east-1, action which will create an event. This event will be sent through a pipeline that will have as endpoint the **lambda autotagging** in us-east-1 in account 111111111111. Thus fulfilling the purpose of centralizing auto-tagging of resources any region for any Linked Account that is set and configured in the pipeline.
-
-### AWS Organizations
-An Existing AWS organization that for the purpose of this project has an ID my-org-id-1234
-**Resource Access Management (RAM)**
-Must be sure that Enabling sharing with AWS Organizations is checked. In the Central Account go to ```Services Tab > type RAM in the search for services text box > select Resource Access Manager > In the RAM menu go to Settings - "Enable sharing with AWS Organizations"``` must be selected.
-
-### IAM Roles and Policies
-In this case `Identity and Access Management (IAM)` is a global element, so do not worry in what region you are in at the moment of loggin in. Though some AWS Services are global like this one and `S3` some others like `EventBridge`, `CloudWatch`, `SNS Topics`, and `Lambda` is regional; therefore, be sure you are in us-east-1 (N. Virginia) for most of the purposes of this project. 
-We need two roles, one  in *Receiver Account* with tailored permissions to assume a role in the linked account and to execute basic lambda functions, and another in the linked account with least priviledge access to create tags for newly launched resources sucha as such as `VPCs, S3 Buckets, SNS Topics, etc`  . In is important to follow the least priviledge access principle when attaching or creating policies for any roles we create.
-
-**"MasterAutoTaggingLambda"** - IAM Resource Role to give permission to lambda autotagging function in *receiver account* to assume role in *linked account* with AWS STS service and to execute basic lambda functions.
-More Details about the policies we need in the Steps section of this document.
-See `AssumeLinkedRolePolicy.json`
-or copy paste from here...
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": {
-        "Effect": "Allow",
-        "Action": "sts:AssumeRole",
-        "Resource": "arn:aws:iam::*:role/ExecuteAutoTaggingLambda"
-    }
-}
-```
-The "*" wildcard in **"Resource": "arn:aws:iam::*:role/AutoTaggingExecuteLambda"** allow it to include any Linked Account in the Organization.
-
-**ExecuteAutoTaggingLambda** - IAM Role we create in every *linked account* with a limited access policy to do the tagging of newly deployed resources. This is the role that  *"MasterAutoTaggingLambda"* assumes to make possible the execution of tags for creation events across accounts.
-
-**ExecuteAutoTaggingLambdaPolicy** - IAM Policy to authorize *ExecuteAutoTaggingLambda* to tag resources
-See `ExecuteAutoTaggingLambdaPolicy.json`
+And we need to attach the following policy to the role
+**policy.json** - IAM Policy to authorize *auto-replicate-parameter-store-role* to replicate Parameter Store Entries
+See `policy.json`
 or copy paste from here...
 ```json
 {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "BasicWritePermissionstoCloudWatchLogs",
+            "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": [
+                "ssm:DescribeParameters",
+                "ec2:DescribeRegions"
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents"
@@ -78,129 +44,67 @@ or copy paste from here...
             "Resource": "*"
         },
         {
-            "Sid": "AutoTaggerforAWSResources",
+            "Sid": "VisualEditor1",
             "Effect": "Allow",
             "Action": [
-                "resource-explorer:*",
-                "tag:*",
-                "logs:DescribeLogGroups",
-                "logs:DescribeLogStreams",
-                "logs:GetLogEvents",
-                "iam:*Tags",
-                "iam:Tag*",
-                "iam:Untag*",
-                "cloudtrail:*Tags",
-                "*:*Tags",
-                "s3:*Tagging",
-                "s3:*Tags",
-                "sns:TagResource",
-                "sns:UntagResource",
-                "sqs:TagQueue",
-                "sqs:UntagQueue",
-                "cloudformation:UpdateStackSet",
-                "cloudformation:CreateChangeSet",
-                "cloudformation:UpdateStackInstances",
-                "codepipeline:CreatePipeline",
-                "codepipeline:TagResource",
-                "codepipeline:UntagResource",
-                "codepipeline:CreateCustomActionType",
-                "codepipeline:ListTagsForResource",
-                "codepipeline:GetPipeline",
-                "codepipeline:PutWebhook",
-                "codebuild:UpdateProject",
-                "codebuild:BatchGetProjects",
-                "ssm:GetParameters",
+                "ssm:PutParameter",
+                "kms:Encrypt",
                 "ssm:ListTagsForResource",
-                "ssm:AddTagsToResource",
-                "ssm:RemoveTagsFromResource",
+                "kms:ReEncryptTo",
                 "ssm:GetParametersByPath",
-                "mediastore:TagResource",
-                "mediastore:UntagResource",
-                "cloudformation:TagResource",
-                "cloudformation:UpdateStack",
-                "cloudformation:UntagResource",
-                "cloudformation:UpdateTerminationProtection",
-                "lambda:*tag*"
+                "ssm:GetParameters",
+                "kms:GenerateDataKeyPair",
+                "ssm:GetParameter"
             ],
-            "Resource": "*"
+            "Resource": [
+                "arn:aws:kms:*:111111111111:key/75fcc799-de1b-42a9-9a12-a23b31111111111",
+                "arn:aws:ssm:*:111111111111:parameter/*"
+            ]
         }
     ]
 }
 ```
 ### Amazon EventBridge and CloudWatch
-**EventAutoTaggingRule** - This rule filters create or launch events coming from `AWS API Call via CloudTrail` that start with the prefix `"Create"`, `"Put"`, `RunInstances` (the one to launch a new EC2 instances), and `"AllocateAddress"` (for creating an Elastic IP Adress). We used Prefix Matching feature in order to reduce the need to update and rewrite the rule written in json format  . There are about 650 create events for the different AWS Services and about 147 put events that start with "Create" or "PUt" so our rule may need little if nothing updating and upgrading to cover new events launched by AWS.
+**EventRule.json** - This rule filters create or launch events coming from `AWS API Call via CloudTrail` that start with the event name "PutParameter" which is the one create Paramter Store entries.
+See `EventRule.json`
+or copy paste from here...
 
 ```json
 {
+  "source": [
+    "aws.ssm"
+  ],
   "detail-type": [
     "AWS API Call via CloudTrail"
   ],
   "detail": {
+    "eventSource": [
+      "ssm.amazonaws.com"
+    ],
     "eventName": [
-      {
-        "prefix": "Create"
-      },
-      {
-        "prefix": "Put"
-      },
-      "RunInstances",
-      "AllocateAddress"
+      "PutParameter"
     ]
   }
 }
 ```
 
-We will create a rule for every region in the *linked account* that we want to include in the **Auto Tagging** and a matching rule in every matching region in the receiver account
-
-When using prefix feature to create rules in EventBridge and try to  update the very same rules in CloudWatch directly it did not work. Hence, we configure the rules in EventBridge even though the end result is also shown in CloudWatch. 
-
-**Add Permissions in Event Buses** - 
-`CloudWatch` and `EventBridge` have a default Event Bus that is the recommended one to pass events for AWS Services. We have to set the proper permissions for it to start to send and receive events from the organization. Therefore, we add the Permissions to sent events from linked account and  get all events in Receiver Account, both members of the organization. 
-
-## We need to add permissions for this particular architecture in Event Buses but Why? 
-`CloudWatch` and `EventBridge` only pass events between matching regions across accounts, from Default Event Bus in *linked account/ us-east-1* to Default Event Bus in *Receiver Account / us-east-1*. Therefore, when a Vpc deployment happens in us-east-1 in the *linked account* it ends up in Default Event Bus in Receiver Account. From there we set a Rule and a target to keep moving the event along the pipeline.
-
-We have to do this permission setting from every region we want to incorporate in the autotagging process and that is why we use the organization, to reduce the modifications needed in the *receiver account*. Once we set the permissions in a certain region in *receiver account* it is ready to pass events from any *linked account* in the organization, instead adding each new account at once. A more detail explanation in the pipeline configurations steps.
-
-
-### Amazon SNS - 
-It is one of the few AWS services that can deliver event data across regions and it is key part in this project to make it scalable. 
-**SnsSendToLambda** - The `SNS Topic` that have to be created in every region of the *Receiver Account* that we want to include in the auto-tagging.  This `SNS Topic` helps to centralize the collection process of creation events from all regions. It sends the event metadata to us-east-1 to the **Autotagging lambda** the Lambda function that does the auto tagging throughout the organization. 
-We set this `SNS topic` as a target for **"EventAutoTagging"** rule in `EventBridge` in order to futher route the event to lambda (then again from any region). In this demo we are using us-east-1, but by repeating some steps we can add us-east-2, us-west-1 and any region into the auto-tagging pipeline. So in order to make our pipeline as scalable as possible we use `SNS Topics` as intermedial step.
-In our project a `EventBridge` Rule could be deployed in us-east-2 or us-west-1 and stil relay the event to Lambda in us-east-1 by using `SNS Topic` as intermedial target to pass the events.
-
-It is important to mention that by using *SNS Topics* as intermedial step in the pipeline allow us to modify this function to automate tagging from a single to multiple accounts with very little modifications. We have a separate Git where we explain how you can do the autotagging in a single account.
+Note: sometimes when creating complex custom rules such as when using prefix feature it is necessary to create them in EventBridge or to update the very same rules. If it is done CloudWatch directly it may not not work. Hence, we best configure the rules in EventBridge even though the end result is also shown in CloudWatch. 
 
 ### AWS Lambda
 
-**AutoTagging** - Lambda function that we deploy in the *Receiver Account* in the us-east-1 region. It is triggered by a message coming from **SnsSendToLambda**. First, It  converts the message containing the event in a form of a string back into `json` format. Then it sorts every creation case and creates a set of tags; the creator ID, the ARN, and the timestamp to track who did what and when. This is a highly valuable feature to help keep tracking resources and reduce the time consuming resource management, and cut cost. 
+**auto-replicate-parameter-store** - Lambda function that we deploy in the *Designated Region* or in our case the us-east-1 region to replicate . It is triggered by a "PutParameter" coming from CloudWatch. 
 
-### Let us take a look at Auto-Tagging workflow
-A AWS resource, a VPC  is deployed by *Sender* or *linked account* either by using the console or the AWS SDK for Python (Boto3). Yet, all tagging is going to be done by the **AutoTagging** lambda function in us-east-1 in Receiver Account. 
-The VPC deployment generates an event metadata; the timestamp, who was the creator, ARN of the creator, etc. Thus the meta data is passed from the region of origin us-east-1 in *linked account* to trigger the lambda function in *receiver account* and do the tagging.
+### Let us check this solution's architecture and workflow
+A Parameter Store Entry is deployed either by using the console or the AWS SDK for Python (Boto3). Yet, all replication is going to be done by the **auto-replicate-parameter-store** lambda function in us-east-1. The New Parameter Store Entry with the tag replicate/yes or replicate/us-east-2 generates an event metadata; the timestamp, who was the creator, ARN of the creator, etc, but the one we really need is the tag containing the key/value pair = replicate/yes.
 
-`AWS CloudTrail` in *linked account* 222222222222 in us-east-1  records API activity and logs the creation event - `"CreateVpc`". 
-The Amazon EC2 CreateVpc API CloudTrail event provides a lot of tagging information. For example:
-```
-User ID of the entity that created the resource from the principalId key
-The IAM role the entity assumed during resource creation from the arn key.
-The date/time of resource creation from the eventTime key.
-The Vpc ID and other metadata contained in the event. 
-```
+Then, `CloudWatch` in us-east-1 filters the creation event based on **EventRule.json** This rule looks for any event that has "PutParameter", it matches the event  and sends the metadata to the lambda funcion **auto-replicate-parameter-store** as an endpoint.
+ 
+Thus, the lambda function checks if the value of replicate tag is set to yes. If true **auto-replicate-parameter-store** lambda funtion is fired and proceeds to replicate the entry into whatever regions are set in the Environment variables in the Lambda function.
 
-Then, `CloudWatch` in us-east-1 filters the creation event based on **EventAutoTaggingRule.** This rule looks for any event that has `"Create"`, `"PUT"`, or `"Allocate"` as a prefix, it matches the event  and sends the metadata to the default event bus in *Linked Account*. It routes it to the default event bus in *Receiver Account* in us-east-1 as a result. 
+In Summary, The purpose of this pipeline is to centralize the control Parameter Store Entries from a centralized Parameter Store in a designated Region. In this way is easier to manage and monitor entries that are to be used across regions it the Parameter Store
 
-Now tat event metadata of is in the Default Event Bus in EventBridge in *Receiver Account* in us-east-1 it filters and prefix-matches the event with the same **EventAutoTaggingRule.** rule forwards the event to **SnsSendToLambda**.
 
-**SnsSendToLambda*** targets **AutoTagging** lambda function and passes the event to it in a form of string. 
-
-**Autotagging lambda function** is fired. First it converts the event message from a string back to  a `json` readable format. Then by sorting the metada data, it determines from what AWS Service the create event is coming from and does the tagging based on a series of conditional statements and does a response. Thus the new deployed resource gets a set of tags added. What UserName created the resource, the ARN of the creator, and the timestamp of the creation time.
-
-In Summary, The purpose of this pipeline is to centralize the control and tagging of resources being deployed in any *linked account* of the organization with a Lambda function in Receiver Account. Only Users with priviledge access can modify, update, copy this function, so it reduces the human error factor at the moment of tagging amd makes the management of resources easier.
-
-Following this configuration we can repeat the same process for the other regions like us-east-2, us-west-1, etc  in any other linked accounts within the organization that we want to include in the **autotagging.** process.
-
-## Steps to Create the Pipeline to do the Auto-Tagging
+## Steps to Create the Pipeline to do the Auto-Replicate Parameter Store
 
 ### 1. Log in into you account designated as Receiver Account 
 Log in to Account ID 111111111111. This is the account we are going to use to centralized the **Autotagging** in the Organization. This AWS Service is global.
