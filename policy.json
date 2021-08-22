@@ -1,0 +1,35 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:DescribeParameters",
+                "ec2:DescribeRegions"
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:PutParameter",
+                "kms:Encrypt",
+                "ssm:ListTagsForResource",
+                "kms:ReEncryptTo",
+                "ssm:GetParametersByPath",
+                "ssm:GetParameters",
+                "kms:GenerateDataKeyPair",
+                "ssm:GetParameter"
+            ],
+            "Resource": [
+                "arn:aws:kms:*:111111111111:key/75fcc799-de1b-42a9-9a12-a23b31111111111",
+                "arn:aws:ssm:*:111111111111:parameter/*"
+            ]
+        }
+    ]
+}
