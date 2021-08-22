@@ -1,14 +1,10 @@
-# Automatization for Tag Creation with the Username ARN and ID:
-This is an open-source solution to deploy **AutoTagging** using `CloudTrail` and route the deployemnt event through `Cloudwatch Events`, `EventBrigdge`, and `SNS Topics` across accounts to an endpoint - a `lambda function` to `tag resources` at the moment of creation a AWS Resource with the arn of who created, the username ID, and the time of creation. 
-Insofar we have the following services sucessfully tested for auto-tag creation; `all ec2 services, S3, CloudTrail, CloudWatch, System Manager, Code Pipeline, CodeBuild, Sns, Sqs, IAM, and Cloudformation`. Each of those services get a tag with Creator ID, the ARN, and Time of Creation.
+# Automatization to Replicate Parameters in the Parameter Store into another Region either at the moment of Creation or thru an Event Schedule Rule in CloudWatch:
+This is an open-source solution to deploy **AutoReplication** using `CloudTrail` and route the deployemnt event through `Cloudwatch Events`, and `EventBrigdge`,` across regions if it is the case to an endpoint - a `lambda function` to `replicate parameters` at the moment of creation or thru a scheduled event in CloudWatch. Hence a Parameter created in a central paramter store, say in US-EAST-1 it is replicated in US-EAST-2. If is already in existence in US-EAST-2 then it is updated.
 
 ### PreFlight Check
-1. Intermedial to advance level in Python. So, you can adapt and customized the `CreateTagCreatorID.py` files to your need an use cases.
+1. Intermedial to advance level in Python. So, you can adapt and customized the `auto-replicate-parameter-store.py` files to your need an use cases.
 2. Basic to intermedial level in json to edit json policies in `EventBridge Rules` to change the rules and policies to the needs of your use cases since we have not cover every single resource in AWS.
-3. An existing `AWS Organization`
-4. A `Resource Access Manager (RAM)` > Settings with "Enable Sharing with AWS Organizations" checked.
-![image](https://user-images.githubusercontent.com/77359069/112931098-c7f81180-911b-11eb-8033-1adbcfc7173a.png)
-5. One AWS Account known as the "the Central or *Receiver Account"* to centralize and receive all creation events. Here is where we deploy **AutoTagging Lambda function**.
+3. One AWS Region known as the "the Central or *Receiver Region"* to deploy the parameters to be replicated. Here is where we deploy **AutoTagging Lambda function**.
 6. In Every other linked/ sender  account included in your organization will need the following
     A. `Cloudwatch` log group collecting `cloudtrail` for every region.
     B. `Eventbridge` rules for every region for Receiver account and Linked Accounts in order to create a pipeline to pass the create events from the source region in any linked account to the lambda function in us-east-1 in central or receiving account.
