@@ -196,21 +196,21 @@ n.- Click "Create Role Button"
 ![alt text](Imagen de Role auto-replicate-parameter-store-role siendo creado)
 
 
-## 4. Deploy Autotagging Lambda Function in Receiver Account
+## 3. Deploy auto-replicate-parameter-store Lambda Function in us-east-1
 
-We set our lambda function in virginia region or us-east-1. This is the endpoint for any deployment or creation event happening in any region in any account that is configured in the pipeline for **Auto-tagging* and in this lambda function. 
+We deploy our lambda function in Virginia Region/us-east-1. This is the endpoint for any new entry in the parameter store in us-east-1 that is to be replicated to any other region that is configured in the pipeline.
 
-Create a **AutoTagging** lambda function with the console:
+Create a **auto-replicate-parameter-store** lambda function with the console:
 
-a.- First, be sure you are in Receiver Account in us-east-1 . In the console click the services tab and look for Lamdba under (It seems repetive, but it is easy to be in the wrong account and fail to do the settings)
+a.- First, be sure you are in us-east-1  (It seems repetive, but it is easy to be in the wrong region and fail to do the pipeline configuration) . In the console click the services tab and look for Lamdba under
 ```
 All services > Compute > Lambda or just type lambda in the text box. then hit Lambda
 ```
 b.- In the AWS lambda window go to Functions.
 c. Click the "Create function" buttom.
 d. You will the following options to create your function Author from scratch, Use blueprint, Container Image, and Browse serverless app repository, choose Author from scratch.
-e. In Function name type **"AutoTagging"** or any name you choose to, in Runtime look for Python 3.8
-f.- In Permissions - click Change default execution role and select "Use an existing role". In the dialog box that opens up look for **"MasterAutoTaggingLambda"**, this is the role we created in the previous step.
+e. In Function name type **"auto-replicate-parameter-store"** or any name you choose to, in Runtime look for Python 3.9
+f.- In Permissions - click Change default execution role and select "Use an existing role". In the dialog box that opens up look for **"auto-replicate-parameter-store-role"**, this is the role we created in the previous step.
 g.- Click "Create function" button
 h.- Under Code source > In Environment click `lambda_function.py`
 i.- Delete all existing code an replace it with the code provided in the `CreateTagCreatorID.py` file
