@@ -320,4 +320,4 @@ Let us create a new entry at the Parameter Store set to be replicated:
 ![alt text](imagen de entry en el parameter store en ohio....)
 
 
-**Note: To implement the replication in other regions, repeat modify the ```Environment Variable > region``` of the lambda function as applicable in your project **
+**Note: To implement the replication in other regions, repeat modify the "Environment Variable > region" of the lambda function as applicable in your project**
