@@ -163,9 +163,9 @@ d.- In Create policy window select JSON tab. Click and copy-paste the following 
 }
 ```
 
-h.- Click "Next: Review" button
-i.- In Review policy window in Name type **"policy.json"**
-j.- In Description type "Rule to enable **auto-replicate-parameter-store-role** Rule to replicate parameter store entries" and click "Create policy". 
+e.- Click "Next: Review" button
+f.- In Review policy window in Name type **"policy.json"**
+g.- In Description type "Rule to enable **auto-replicate-parameter-store-role** Rule to replicate parameter store entries" and click "Create policy". 
 
 **Note** Under Resource...
 
