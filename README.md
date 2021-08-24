@@ -208,9 +208,9 @@ a.- First, be sure you are in us-east-1  (It seems repetive, but it is easy to b
 All services > Compute > Lambda or just type lambda in the text box. then hit Lambda
 ```
 b.- In the AWS lambda window go to Functions.
-c. Click the "Create function" buttom.
-d. You will the following options to create your function Author from scratch, Use blueprint, Container Image, and Browse serverless app repository, choose Author from scratch.
-e. In Function name type **"auto-replicate-parameter-store"** or any name you choose to, in Runtime look for Python 3.9
+c.- Click the "Create function" buttom.
+d.- You will the following options to create your function Author from scratch, Use blueprint, Container Image, and Browse serverless app repository, choose Author from scratch.
+e.- In Function name type **"auto-replicate-parameter-store"** or any name you choose to, in Runtime look for Python 3.9
 f.- In Permissions - click Change default execution role and select "Use an existing role". In the dialog box that opens up look for **"auto-replicate-parameter-store-role"**, this is the role we created in the previous step.
 g.- Click "Create function" button
 h.- Under Code source > In Environment click `lambda_function.py`
