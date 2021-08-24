@@ -106,79 +106,35 @@ In Summary, The purpose of this pipeline is to centralize the control Parameter 
 
 ## Steps to Create the Pipeline to do the Auto-Replicate Parameter Store
 
-### 1. Log in into you account designated as Receiver Account 
-Log in to Account ID 111111111111. This is the account we are going to use to centralized the **Autotagging** in the Organization. This AWS Service is global.
+### 1. Log in into you account and get the AWS/SSM Managed Key ID 
+Log in to Account ID 111111111111. This is the account number we are going to use as reference in this exercise. When rewriting policies or Rules remember to replace 111111111111 with your account number.
 
-### 2 Setting up the primary Role "MasterAutoTaggingLambda" in ReceiverAccount
-First, we create an **"AssumeLinkedRolePolicy"** to allow AutoTaggingMasterLambda role in receiver account  to assume any role named **ExecuteAutoTaggingLambda** in any *Linked account*:
+a.- At the console screen go to services and type in the text box `"KMS"` or under All
+    ```Services > Security, Identity, & Compliance > Key Management Service (KMS)```
+b.- In `Key Management Service` (KMS) menu > go to `AWS managed keys` and click `"aws/ssm"` Under AWS managed keys list
+c.- In General Configuration copy and save the Key ARN. For the purposes of this example the Key ID is "arn:aws:kms:us-east-1:111111111111:key/75fcc799-de1b-42c7-9a12-a23b31111111111"
 
-a.- Be sure you are in *Receiver Account* 111111111111
-b.- At the console screen go to services and type in the text box `"IAM"` or under All
+![alt text](imagen de KMS con vainas difuminadas que no se vean)
+
+### 2 Setting up the Lamdba Role **auto-replicate-parameter-store-role**
+First, we create an **policy.json** to allow auto-replicate-parameter-store-role to have all required autorizations to replicate Parameter Store Entries:
+
+a.- At the console screen go to services and type in the text box `"IAM"` or under All
     ```Services > Security, Identity, & Compliance > IAM```
-c.- In `Identity and Access Managment (IAM) menu > go to Policies` and click `"Create policy"` button
-d.- Click Create policy next.
-e.- In Create policy window select JSON tab. Click and copy-paste the following policy and click the "Next: tags" button:
-
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": {
-        "Effect": "Allow",
-        "Action": "sts:AssumeRole",
-        "Resource": "arn:aws:iam::*:role/ExecuteAutoTaggingLambda"
-    }
-}
-```
-
-h.- Click "Next: Review" button
-i.- In Review policy window in Name type **"AssumeLinkedRolePolicy"**
-j.- In Description type "Rule to enable **AutoTaggingMasterLambda** Role to assume any role named "AutoTaggingExecuteLambda" in any Linked Account" and click "Create policy". 
-
-![alt text](https://github.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/blob/main/img/1.png?raw=true)
-
-
-
-
-
-#### Create "MasterAutoTaggingLambda" role in Receiver Account
-a.- Be sure you are in `Receiver Account` 111111111111
-b.- At the console screen go to services and type in the text box `"IAM"` or under All services > Security, Identity, & Compliance > IAM
-d.- In Create Role window > Under "Select type of trusted entity" keep AWS service as your choice
-e.- In "Choose a use case" select "Lambda" and click "Next: Permissions" button
-f.- In next window, under Attach Permissions policies in the search box type "lambdabasic"
-g.- Checkmark the AWS managed policy **"AWSLambdaBasicExecutionRole"**
-h.- Under Create policy clear the Search box 
-i- Click Filter policies and checkmark "Customer managed"
-j.- Scroll down and checkmark the Customer managed policy **"AssumeLinkedRolePolicy"**
-k.-  Click "Next:Tags" button and click "Next: Review" button too
-l.- Under Review, in Role name `*` type **"MasterAutoTaggingLambda"** 
-m.- In Role description type "Resource Role to give permission to lambda autotagging function in *receiver account* to assume roles named **"ExecuteAutoTaggingLambda"** in linked account with AWS STS service". 
-Observe that in Trusted entities you got AWS service: lambda.amazonaws.com and two policies attached to the role
-n.- Click "Create Role Button"
-
-![alt text](https://raw.githubusercontent.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/main/img/2.png)
-
-Is noteworthy to say you should keep the same role name **"ExecuteAutoTaggingLambda"** in every new or existing linked accounts in your organization that you want to include in the Auto-tagging pipeline.
-
-### 3 Setting up a Role in Linked Account
-Create a role in *Linked Account* that has enough permissions to execute lambda to add tags to resources. 
-Follow the steps:
-**Create a Policy **"ExecuteAutoTaggingLambdaPolicy"** to allow **ExecuteAutoTaggingLambda** role in Linked Account to enable Lambda to tag resources. Remember this role will be assumed by **"MasterAutoTaggingLambda"** in Receiver Account:
-a.- Be sure you are in *Linked Account* 222222222222
-b.- At the console screen go to services and type in the text box `"IAM"` or under All
-    ```Services > Security, Identity, & Compliance > IAM```
-c.- In `Identity and Access Managment (IAM) menu > go to Policies` and click `"Create policy"` button
-d.- Click Create policy next.
-e.- In Create policy window select JSON tab. Click and paste the following policy and click the "Next: tags" button:
+b.- In `Identity and Access Managment (IAM) menu > go to Policies` and click `"Create policy"` button
+c.- Click Create policy next.
+d.- In Create policy window select JSON tab. Click and copy-paste the following policy and click the "Next: tags" button:
 
 ```json
 {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "BasicWritePermissionstoCloudWatchLogs",
+            "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": [
+                "ssm:DescribeParameters",
+                "ec2:DescribeRegions"
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents"
@@ -186,104 +142,58 @@ e.- In Create policy window select JSON tab. Click and paste the following polic
             "Resource": "*"
         },
         {
-            "Sid": "AutoTaggerforAWSResources",
+            "Sid": "VisualEditor1",
             "Effect": "Allow",
             "Action": [
-                "resource-explorer:*",
-                "tag:*",
-                "logs:DescribeLogGroups",
-                "logs:DescribeLogStreams",
-                "logs:GetLogEvents",
-                "iam:*Tags",
-                "iam:Tag*",
-                "iam:Untag*",
-                "cloudtrail:*Tags",
-                "*:*Tags",
-                "s3:*Tagging",
-                "s3:*Tags",
-                "sns:TagResource",
-                "sns:UntagResource",
-                "sqs:TagQueue",
-                "sqs:UntagQueue",
-                "cloudformation:UpdateStackSet",
-                "cloudformation:CreateChangeSet",
-                "cloudformation:UpdateStackInstances",
-                "codepipeline:CreatePipeline",
-                "codepipeline:TagResource",
-                "codepipeline:UntagResource",
-                "codepipeline:CreateCustomActionType",
-                "codepipeline:ListTagsForResource",
-                "codepipeline:GetPipeline",
-                "codepipeline:PutWebhook",
-                "codebuild:UpdateProject",
-                "codebuild:BatchGetProjects",
-                "ssm:GetParameters",
+                "ssm:PutParameter",
+                "kms:Encrypt",
                 "ssm:ListTagsForResource",
-                "ssm:AddTagsToResource",
-                "ssm:RemoveTagsFromResource",
+                "kms:ReEncryptTo",
                 "ssm:GetParametersByPath",
-                "mediastore:TagResource",
-                "mediastore:UntagResource",
-                "cloudformation:TagResource",
-                "cloudformation:UpdateStack",
-                "cloudformation:UntagResource",
-                "cloudformation:UpdateTerminationProtection",
-                "lambda:*tag*"
+                "ssm:GetParameters",
+                "kms:GenerateDataKeyPair",
+                "ssm:GetParameter"
             ],
-            "Resource": "*"
+            "Resource": [
+                "arn:aws:kms:*:111111111111:key/75fcc799-de1b-42c7-9a12-a23b31111111111",
+                "arn:aws:ssm:*:111111111111:parameter/*"
+            ]
         }
     ]
 }
 ```
 
-h.- Click "Next: Review" button.
-i.- In Review policy window in Name type **"ExecuteAutoTaggingLambdaPolicy"**
-j.- In Description type "Policy to enable **ExecuteAutoTaggingLambda** Role to tag newly deployed resources" and click "Create policy"
+h.- Click "Next: Review" button
+i.- In Review policy window in Name type **"policy.json"**
+j.- In Description type "Rule to enable **auto-replicate-parameter-store-role** Rule to replicate parameter store entries" and click "Create policy". 
 
-![alt text](https://raw.githubusercontent.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/main/img/3.png)
+**Note** Under Resource...
 
-#### Create ExecuteAutoTaggingLambda role in Linked Account
-a.- Be sure you are in *Receiver Account* 222222222222
+```json
+            "Resource": [
+                "arn:aws:kms:*:111111111111:key/75fcc799-de1b-42c7-9a12-a23b31111111111",
+                "arn:aws:ssm:*:111111111111:parameter/*"
+            ]
+```
+                
+ ... replace the KMS Key arn and the Account number wherever applicable
+        
+![alt text](imagen)
+
+#### Create "auto-replicate-parameter-store-role"
+a.- Be sure you are in `Account 111111111111`
 b.- At the console screen go to services and type in the text box `"IAM"` or under All services > Security, Identity, & Compliance > IAM
 d.- In Create Role window > Under "Select type of trusted entity" keep AWS service as your choice
 e.- In "Choose a use case" select "Lambda" and click "Next: Permissions" button
-![alt text](https://raw.githubusercontent.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/main/img/4.png)
-f- Click Filter policies and checkmark "Customer managed"
-g.- Scroll down and checkmark the Customer managed policy **"ExecuteAutoTaggingLambdaPolicy"**
-h.-  Click "Next:Tags" button and click "Next: Review" button too
-i.- Under Review, in Role name `*` type **ExecuteAutoTaggingLambda.** 
-j.- In Role description type "Resource Role to give permission to lambda autotagging function in *receiver account* to tag resources deployed in this Linked Account". 
-Observe that in Trusted entities you got AWS service: lambda.amazonaws.com and two policies attached to the role.
-k.- Click "Create Role Button"
+f.- In next window, under Attach Permissions policies click Filter policies and checkmark "Customer managed"
+j.- Scroll down and checkmark the Customer managed policy **"policy.json"**
+k.-  Click "Next:Tags" button and click "Next: Review" button too
+l.- Under Review, in Role name `*` type **"auto-replicate-parameter-store-role"** 
+m.- In Role description type "Resource Role to replicate parameter store entries" 
+    Observe that in Trusted entities you got AWS service: lambda.amazonaws.com and the recently created policy attached to the role
+n.- Click "Create Role Button"
 
-![alt text](https://raw.githubusercontent.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/main/img/5.png)
-
-Is noteworthy to say you should keep the same role name **"ExecuteAutoTaggingLambda"** in every new linked accounts in your organization so as not to keep adding new policies into the Receiver Account
-
-#### Modify ExecuteAutoTaggingLambda role trust policy 
-We have to modify the trust policy to enable **"MasterAutoTaggingLambda"** in Receiver Account assumes **ExecuteAutoTaggingLambda** in Linked Account
-a. Search for the Role we just created. In the text box under "Create role" button type "ExecutAauto
-b. Click ExecuteAutoTaggingLambda
-c. In Summary window you can see all related info about the role. Click the "Trust relationships" tab and click "Edit trust relationship" button
-d. In Edit Trust Relationship window you can customize trust relationships by editing the following access control policy document with the following json:
-
-```json
- {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::111111111111:role/MasterAutoTaggingLambda"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-```
-Note: Edit the 111111111111 Account number with your Receiver Account ID
-
-e. CLick "Update Trust Policy" button and next stept
+![alt text](Imagen de Role auto-replicate-parameter-store-role siendo creado)
 
 
 ## 4. Deploy Autotagging Lambda Function in Receiver Account
