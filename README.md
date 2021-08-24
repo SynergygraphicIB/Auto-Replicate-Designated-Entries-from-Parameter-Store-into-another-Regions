@@ -116,8 +116,8 @@ c.- In General Configuration copy and save the Key ARN. For the purposes of this
 
 ![alt text](imagen de KMS con vainas difuminadas que no se vean)
 
-### 2 Setting up the Lamdba Role **auto-replicate-parameter-store-role**
-First, we create an **policy.json** to allow auto-replicate-parameter-store-role to have all required autorizations to replicate Parameter Store Entries:
+### 2. Setting up the Lamdba Role **auto-replicate-parameter-store-role**
+1. We create an **policy.json** to allow auto-replicate-parameter-store-role to have all required autorizations to replicate Parameter Store Entries:
 
 a.- At the console screen go to services and type in the text box `"IAM"` or under All
     ```Services > Security, Identity, & Compliance > IAM```
@@ -180,7 +180,8 @@ j.- In Description type "Rule to enable **auto-replicate-parameter-store-role** 
         
 ![alt text](imagen)
 
-#### Create "auto-replicate-parameter-store-role"
+2.- Create "auto-replicate-parameter-store-role"
+
 a.- Be sure you are in `Account 111111111111`
 b.- At the console screen go to services and type in the text box `"IAM"` or under All services > Security, Identity, & Compliance > IAM
 d.- In Create Role window > Under "Select type of trusted entity" keep AWS service as your choice
@@ -196,7 +197,7 @@ n.- Click "Create Role Button"
 ![alt text](Imagen de Role auto-replicate-parameter-store-role siendo creado)
 
 
-## 3. Deploy auto-replicate-parameter-store Lambda Function in us-east-1
+### 3. Deploy auto-replicate-parameter-store Lambda Function in us-east-1
 
 We deploy our lambda function in Virginia Region/us-east-1. This is the endpoint for any new entry in the parameter store in us-east-1 that is to be replicated to any other region that is configured in the pipeline.
 
@@ -213,201 +214,103 @@ e. In Function name type **"auto-replicate-parameter-store"** or any name you ch
 f.- In Permissions - click Change default execution role and select "Use an existing role". In the dialog box that opens up look for **"auto-replicate-parameter-store-role"**, this is the role we created in the previous step.
 g.- Click "Create function" button
 h.- Under Code source > In Environment click `lambda_function.py`
-i.- Delete all existing code an replace it with the code provided in the `CreateTagCreatorID.py` file
+i.- Delete all existing code an replace it with the code provided in the `auto-replicate-parameter-store.py` file
 j.- Once you paste the new code click "Deploy"
-j.- In the Code Source menu click Test
-k.- In "Configure test event" leave Create new test event selected, In event template leave "Hello-world". In name type "create_tags", leave the rest as it is and click "Create Test" Button. Voila your lambda function is set!
+k.- Click the `Configuration` tab an go to `Environment variables`. 
+l.- In `Environment variables` click `Edit` Button and a new `Edit environment variables` window will open.
+m.- Click `Add environment variable` Next under `Key` type region, and under `Value` type us-west-2,us-east-2 (Notice that when adding different regions we use comma to separate the values and no spaces). Click `Save`
 
-![alt text](https://raw.githubusercontent.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/main/img/6.png)
+![alt text](imagen de creacion de la variables de entorno)
 
-## 5. Create SNS Topic 
-Create a topic - **"SNStoAutoTaggingLambda"** and Subscribe it to Lambda Function **"AutoTagging"** *in ReceiverAccount*. So let us follow the next steps:
+Voila your lambda function is set!
 
-a.- Be sure you are in us-east-1 region (SNS works across regions, but still is a regional resource)
-b.- At the console screen go to services and type in the text box "sns" or under All ```
-```
-services > Aplication Intergration > Simple Notification Service
-```
-c. -CLick at the Simple Notification Service
-e.- In the menu to the left click Topics and then The `"Create Topic"` orange buttom.
-f.- In Create topic window choose Stardard, In Name type **"SNStoAutoTaggingLambda"**
-g.- In the Access policy section we keep the Basic method 
-h.- Click Create topic buttom. The topic is created.
-i.- Now, we create the subscription. Click the Create subscription button.
-j. In Details > Topic ARN look for the topic created in the previous steps
-k.-In Protocol choose AWS Lambbda and look for the ARN of the lambda function **AutoTagging.**
-l.- Hit the Create Subscription Button. Voila! the subscription is done.
-
-![alt text](https://raw.githubusercontent.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/main/img/7.png)
-
-## 6. In `CloudWatch` in *Receiver Account* add the necessary permissions to `Event Buses` 
-In Event Buses we have to manage event bus permissions to enabble passing event metadata:
-a.- Be sure you are in us-east-1 region in *Receiver Account*
-b.- At the console screen go to services and type in the text box `"Cloudwatch"` or under All
-```
-services > Management & Governance > Cloudwatch
-```
-c.- In `Event Buses` item in the menu go to `Event Buses`
-d.- Under the permissions section click add permission. A "Add Permission" dialog box opens up. In the Type text box click the arrow and select Organization. In Organization ID select My Organization, your organization Id "my-org-id-1234" should be pre-populated. Hit the Add blue button.
-
-![alt text](https://raw.githubusercontent.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/main/img/9.png)
-
-A Resource-based policy for default event bus is automatically generated.
-To check the policy go to ```Amazon EventBridge > Event buses > default``` and you check Permissions tab you will see a Resource-based policy like this
-The default event bus name is something like this - `arn:aws:events:us-east-1:111111111111:event-bus/default`
-
-![alt text](https://raw.githubusercontent.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/main/img/8.png)
-
-And the resulting policy would look something like this:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "this-is-how-i-pass-events-btwn-accounts-in-my-org",
-    "Effect": "Allow",
-    "Principal": "*",
-    "Action": "events:PutEvents",
-    "Resource": "arn:aws:events:us-east-1:111111111111:event-bus/default",
-    "Condition": {
-      "StringEquals": {
-        "aws:PrincipalOrgID": "my-organization-id"
-      }
-    }
-  }]
-}
-```
+![alt text](imagen de creacion de lambda)
 
 
-## 7 In Receiver Account create an EventBridge Rule in us-east-1 -or Virginia Region and use as target SnsSendToLambda.
-Create a rule that captures all creation events in `Sender Acccount` using `AWS API Call via CloudTrail` and select **SnsSendToLambda** as target:
-a.- Be sure you are in `us-east-1` region in `Receiver Account` 
+### 4. In EventBridge in us-east-1 create a rule and use  as target to replicate entries at moment of creation.
+Create a rule that captures all the parameter store entry creation events in `us-east-1` using `AWS API Call via CloudTrail` and select **auto-replicate-parameter-store** as target in order to automatically replicate the entry at the moment of deployment to whatever regions were set in the `Environment variables` at the lambda function:
+
+a.- Be sure you are in `us-east-1` region 
 b.- At the console screen go to services and type in the text box `"EventBridge"` or under
 ```All services > Application Integration > Amazon EventBridge```
 c.- In the Amazon EventBridge menu select Rules and click "Create Rule" button
-d.- Under Name and Description > Name type **"EventAutoTaggingRule**"
-e.- Add a Description **"Rule to send creation events to SnsSendToLambda"** if you choose to, it is optional
+d.- Under Name and Description > Name type **"EventPutParameter**"
+e.- Add a Description **"Rule to send parameter store entry creation events to auto-replicate-parameter-store lambda function"** if you choose to, it is optional
 f.- In Define pattern choose ```"Event pattern" > Custom Pattern```
 g.- Copy paste the following json in Event Pattern Text Box
 ```json
 {
+  "source": [
+    "aws.ssm"
+  ],
   "detail-type": [
     "AWS API Call via CloudTrail"
   ],
   "detail": {
+    "eventSource": [
+      "ssm.amazonaws.com"
+    ],
     "eventName": [
-      {
-        "prefix": "Create"
-      },
-      {
-        "prefix": "Put"
-      },
-      "RunInstances",
-      "AllocateAddress"
+      "PutParameter"
     ]
   }
 }
 ```
 ... Click "Save"
-Notice that this is exactly the same rule we used in CloudWatch in Receiver Account
 
-h.- In Select event bus leave it as it is, `"AWS default event bus"` and `"Enable the rule on the selected bus"`
-i.- In Select` Targets > in Target click the text box, scroll up and select "SNS Topic"`
-j.- In Topic text box select **"SnsSendToLambda"**
+Notice that "PutParameter" is the Event Name that is generated when a new entry is created at the parameter store
+
+h.- In `Select event bus` section leave it as it is ```Select an event bus`>`AWS default event bus``` 
+i.- In Select` Targets > in Target click the text box, scroll up and select "Lambda Function"`
+j.- In Topic text box select **"auto-replicate-parameter-store"**
 k.- Click `"Create Rule" `button. 
 
-![alt text](https://raw.githubusercontent.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/main/img/9.png)
-
-## 8  In *Linked Account* create a matching `EventBridge Rule` in same region (we are using us-east-1 - Virginia Region) and use as target the` event Bus `in matching us-east-1 region in *Receiver Account*.
-Create a rule that captures all creation events in `Sender Acccount` using `AWS API Call via CloudTrail` and select default event bus as target:
-a.- Be sure you are in us-east-1 region in `Sender Account` 
-b.- At the console screen go to services and type in the text box `"EventBridge"` or under ``All services > Application Integration > Amazon EventBridge```
-
-c.- In the ```Amazon EventBridge menu select Rules and click "Create Rule" button``
-d.- Under Name and ```Description > Name type "EventAutoTaggingRule"``
-e.- Add a Description "Rule to send creation events to default event bus in receiver account" if you choose to, it is optional
-f.- In Define pattern choose ``"Event pattern" > Custom Pattern``
-g.- Copy paste the following json in the Event Pattern Text Box
-```json
-{
-  "detail-type": [
-    "AWS API Call via CloudTrail"
-  ],
-  "detail": {
-    "eventName": [
-      {
-        "prefix": "Create"
-      },
-      {
-        "prefix": "Put"
-      },
-      "RunInstances",
-      "AllocateAddress"
-    ]
-  }
-}
-```
-...Click "Save"
-Notice that this is exactly the same rule we used in CloudWatch in Receiver Account
-
-h.- In Select event bus leave it as it is, ```"AWS default event bus" ```and "Enable the rule on the selected bus"
-
-i.- In ``Select Targets > in Target click the text box, scroll up and select "Event bus in another AWS account"``
-j.- In Event Bus text box type `"arn:aws:events:us-east-1:111111111111:event-bus/default"` (be sure to replace the Account number with your designated Receiver Account)
-k.- Select "Create a new role for this specific resource". EventBridge will create a role for you with the right permissions to pass events into the event bus. Click configure details button.
-
-l.- Click "Create Rule" button. 
-
-![alt text](https://raw.githubusercontent.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/main/img/10.png)
-
-## 9. Add the necessary permissions to Event Buses in CloudWatch in Linked Account
-In `Event Buses` we have to manage event bus permissions to enabble passing event metadata:
-a.- Be sure you are in us-east-1 region in *Sender Account*
-b.- At the console screen go to services and type in the text box `"Cloudwatch"` or under ```All services > Management & Governance > Cloudwatch```
-c.- In `Event Buses` item in the menu go to `Event Buses`.
-d.- Under the permissions section click add permission. A `"Add Permission"` dialog box opens up. In the Type text box click the arrow and select Organization. In `Organization ID `select My Organization, your organization Id `"my-org-id-1234"` should be pre-populated. Hit the Add blue button.
+![alt text](imagen de creacion de regla desde eventBridge)
 
 
-A Resource-based policy for default event bus is automatically generated.
-To check the policy go to ```Amazon EventBridge > Event buses > default ```and you check Permissions tab you will see a Resource-based policy like this
-The default event bus name is something like this - `arn:aws:events:us-east-1:222222222222:event-bus/default`
+### 5. Configure a Schedule Rule that updates Parameter Store Entries set to be replicated across regions based on a fixed rate
 
-And the resulting Reso policy would look something like this:
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [{. 
-    "Sid": "this-is-how-i-pass-events-btwn-accounts-in-my-org",
-    "Effect": "Allow",
-    "Principal": "*",
-    "Action": "events:PutEvents",
-    "Resource": "arn:aws:events:us-east-1:222222222222:event-bus/default",
-    "Condition": {
-      "StringEquals": {
-        "aws:PrincipalOrgID": "my-organization-id"
-      }
-    }
-  }]
-}
-```
+Create a Schedule Rule to trigger  **auto-replicate-parameter-store** as target:
+a.- Be sure you are in `us-east-1` region 
+b.- At the console screen go to services and type in the text box `"EventBridge"` or under
+```All services > Application Integration > Amazon EventBridge```
+c.- In the Amazon EventBridge menu select Rules and click "Create Rule" button
+d.- Under Name and Description > Name type **"replicate-parameters-by-schedule**"
+e.- Add a Description **"Rule to trigger the replication of Paramater Store Entries set to replicate/yes across regions"** if you choose to, it is optional
+f.- In Define pattern choose ```" > Schedule"```
+g.- In `Fixed rate every` Type `24` and select `Hours` (Or just choose any time schedule you want)
+h.- In `Select event bus` section leave it as it is ```Select an event bus`>`AWS default event bus``` 
+i.- In Select` Targets > in Target click the text box, scroll up and select "Lambda Function"`
+j.- In Topic text box select **"auto-replicate-parameter-store"**
+k.- Click `"Create Rule" `button. 
 
-## 10. Deploy a VPC in *Linked Account* and Check the Tags
-Either by console or by AWS CLi SDK for boto3 deploy a Vpc or any resource that you desire.
-Using the AWS Console:
-a. In *Sender Account,* in us-east-1 go to the resource tab
-b. In the services search text box type vpc or under "Networking & Content Delivery" look for VPC. Click VPC
-c.- In the menu to the left click "Your VPCs"
-d.- In Your VPCs window click "Create VPC" button
-e.- In Create VPC > VPC settings > Name tag type test-project or any name you want to.
-f.- In IPv4 CIDR block type 10.0.0.0/24, leave the rest of the settings as it is.
-g.- Click the "Create VPC" button.
-{pegar imagen aqui}
-h.- You will be redirected to the newly created vpc window details. under the "Tags" tab click it and check for the tags. 
+![alt text](imagen de creacion de regla SCHEDULE desde eventBridge)
 
-![alt text](https://raw.githubusercontent.com/SynergygraphicIB/Automatization-of-Tag-Creator-based-on-UserName-Across-Accounts/main/img/11.png)
+Note: The Fixed Rate you set determines how many times the parameter store will be updated per day
 
-You will see the Following tags; create_at, UserName, Name, and creatorId. 
+### 6  Create a new Entry at the Parameter Store with Tags: replicate/yes 
+Let us create a new entry at the Parameter Store set to be replicated:
+
+a.- Be sure you are in `us-east-1` region 
+b.- At the console screen go to services and type in the text box `"Parameter Store"` or under
+```All services > Management & Governance > Systems Manager```    
+c.- In the `AWS Systems Manager` menu select `Parameter Store` and click `Create Parameter` button
+d.- In ```Create parameter > Parameter details > Name ``` type `test-parameter`
+e.- In ```Create parameter > Parameter details > Description — Optional ``` type `Parameter to be replicated in Ohio and Oregon`
+f.- In ```Create parameter > Parameter details > Tier ``` leave `Standard`
+g.- In ```Create parameter > Parameter details > Type ``` choose `SecureString` (in order to test encryption/decryption capabilities)
+h.- In ```Create parameter > Parameter details > KMS key source ``` leave `My current account`
+j.- In ```Create parameter > Parameter details > KMS Key ID ``` leave `alias/aws/ssm` 
+k.- In ```Create parameter > Parameter details > Value ``` type `Hey it is replicated!`
+l.- In ```Tags ``` click `Add tag` 
+m.- In ```Key``` text box type `replicate`, and in ```Value``` text box type `yes` and click ```Create parameter```
+
+![alt text](imagen de entry en el parameter store en virginia....)
+
+n.- Now, You will see the same entry replicated at the Paramter Store in us-east-2 and us-west-2
+
+![alt text](imagen de entry en el parameter store en ohio....)
 
 
 
-### Note: To implement the function in different regions, repeat steps 4 to 8 and replace the region values as applicable
+### Note: To implement the replication in other regions, repeat modify the ```Environment Variable > region``` of the lambda function as applicable in your project
