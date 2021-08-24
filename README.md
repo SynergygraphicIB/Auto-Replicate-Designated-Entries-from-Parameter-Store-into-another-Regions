@@ -109,10 +109,10 @@ In Summary, The purpose of this pipeline is to centralize the control Parameter 
 ### 1. Log in into you account and get the AWS/SSM Managed Key ID 
 Log in to Account ID 111111111111. This is the account number we are going to use as reference in this exercise. When rewriting policies or Rules remember to replace 111111111111 with your account number.
 
-a.- At the console screen go to services and type in the text box `"KMS"` or under All
+1. At the console screen go to services and type in the text box `"KMS"` or under All
     ```Services > Security, Identity, & Compliance > Key Management Service (KMS)```
-b.- In `Key Management Service` (KMS) menu > go to `AWS managed keys` and click `"aws/ssm"` Under AWS managed keys list
-c.- In General Configuration copy and save the Key ARN. For the purposes of this example the Key ID is "arn:aws:kms:us-east-1:111111111111:key/75fcc799-de1b-42c7-9a12-a23b31111111111"
+2. In `Key Management Service` (KMS) menu > go to `AWS managed keys` and click `"aws/ssm"` Under AWS managed keys list
+3. In General Configuration copy and save the Key ARN. For the purposes of this example the Key ID is "arn:aws:kms:us-east-1:111111111111:key/75fcc799-de1b-42c7-9a12-a23b31111111111"
 
 ![alt text](imagen de KMS con vainas difuminadas que no se vean)
 
