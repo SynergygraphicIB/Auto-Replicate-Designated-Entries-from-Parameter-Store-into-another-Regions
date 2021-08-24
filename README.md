@@ -119,53 +119,53 @@ c.- In General Configuration copy and save the Key ARN. For the purposes of this
 ### 2. Setting up the Lamdba Role **auto-replicate-parameter-store-role**
 1. We create an **policy.json** to allow auto-replicate-parameter-store-role to have all required autorizations to replicate Parameter Store Entries:
 
-a.- At the console screen go to services and type in the text box `"IAM"` or under All
-    ```Services > Security, Identity, & Compliance > IAM```
-b.- In `Identity and Access Managment (IAM) menu > go to Policies` and click `"Create policy"` button
-c.- Click Create policy next.
-d.- In Create policy window select JSON tab. Click and copy-paste the following policy and click the "Next: tags" button:
+    a.- At the console screen go to services and type in the text box `"IAM"` or under All
+        ```Services > Security, Identity, & Compliance > IAM```
+    b.- In `Identity and Access Managment (IAM) menu > go to Policies` and click `"Create policy"` button
+    c.- Click Create policy next.
+    d.- In Create policy window select JSON tab. Click and copy-paste the following policy and click the "Next: tags" button:
 
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "VisualEditor0",
-            "Effect": "Allow",
-            "Action": [
-                "ssm:DescribeParameters",
-                "ec2:DescribeRegions"
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "VisualEditor1",
-            "Effect": "Allow",
-            "Action": [
-                "ssm:PutParameter",
-                "kms:Encrypt",
-                "ssm:ListTagsForResource",
-                "kms:ReEncryptTo",
-                "ssm:GetParametersByPath",
-                "ssm:GetParameters",
-                "kms:GenerateDataKeyPair",
-                "ssm:GetParameter"
-            ],
-            "Resource": [
-                "arn:aws:kms:*:111111111111:key/75fcc799-de1b-42c7-9a12-a23b31111111111",
-                "arn:aws:ssm:*:111111111111:parameter/*"
-            ]
-        }
-    ]
-}
-```
+    ```json
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "VisualEditor0",
+                "Effect": "Allow",
+                "Action": [
+                    "ssm:DescribeParameters",
+                    "ec2:DescribeRegions"
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                ],
+                "Resource": "*"
+            },
+            {
+                "Sid": "VisualEditor1",
+                "Effect": "Allow",
+                "Action": [
+                    "ssm:PutParameter",
+                    "kms:Encrypt",
+                    "ssm:ListTagsForResource",
+                    "kms:ReEncryptTo",
+                    "ssm:GetParametersByPath",
+                    "ssm:GetParameters",
+                    "kms:GenerateDataKeyPair",
+                    "ssm:GetParameter"
+                ],
+                "Resource": [
+                    "arn:aws:kms:*:111111111111:key/75fcc799-de1b-42c7-9a12-a23b31111111111",
+                    "arn:aws:ssm:*:111111111111:parameter/*"
+                ]
+            }
+        ]
+    }
+    ```
 
-e.- Click "Next: Review" button
-f.- In Review policy window in Name type **"policy.json"**
-g.- In Description type "Rule to enable **auto-replicate-parameter-store-role** Rule to replicate parameter store entries" and click "Create policy". 
+    e.- Click "Next: Review" button
+    f.- In Review policy window in Name type **"policy.json"**
+    g.- In Description type "Rule to enable **auto-replicate-parameter-store-role** Rule to replicate parameter store entries" and click "Create policy". 
 
 **Note** Under Resource...
 
@@ -182,19 +182,19 @@ g.- In Description type "Rule to enable **auto-replicate-parameter-store-role** 
 
 2.- Create "auto-replicate-parameter-store-role"
 
-a.- Be sure you are in `Account 111111111111`
-b.- At the console screen go to services and type in the text box `"IAM"` or under All services > Security, Identity, & Compliance > IAM
-d.- In Create Role window > Under "Select type of trusted entity" keep AWS service as your choice
-e.- In "Choose a use case" select "Lambda" and click "Next: Permissions" button
-f.- In next window, under Attach Permissions policies click Filter policies and checkmark "Customer managed"
-j.- Scroll down and checkmark the Customer managed policy **"policy.json"**
-k.-  Click "Next:Tags" button and click "Next: Review" button too
-l.- Under Review, in Role name `*` type **"auto-replicate-parameter-store-role"** 
-m.- In Role description type "Resource Role to replicate parameter store entries" 
-    Observe that in Trusted entities you got AWS service: lambda.amazonaws.com and the recently created policy attached to the role
-n.- Click "Create Role Button"
+    a.- Be sure you are in `Account 111111111111`
+    b.- At the console screen go to services and type in the text box `"IAM"` or under All services > Security, Identity, & Compliance > IAM
+    d.- In Create Role window > Under "Select type of trusted entity" keep AWS service as your choice
+    e.- In "Choose a use case" select "Lambda" and click "Next: Permissions" button
+    f.- In next window, under Attach Permissions policies click Filter policies and checkmark "Customer managed"
+    j.- Scroll down and checkmark the Customer managed policy **"policy.json"**
+    k.-  Click "Next:Tags" button and click "Next: Review" button too
+    l.- Under Review, in Role name `*` type **"auto-replicate-parameter-store-role"** 
+    m.- In Role description type "Resource Role to replicate parameter store entries" 
+        Observe that in Trusted entities you got AWS service: lambda.amazonaws.com and the recently created policy attached to the role
+    n.- Click "Create Role Button"
 
-![alt text](Imagen de Role auto-replicate-parameter-store-role siendo creado)
+    ![alt text](Imagen de Role auto-replicate-parameter-store-role siendo creado)
 
 
 ### 3. Deploy auto-replicate-parameter-store Lambda Function in us-east-1
@@ -203,22 +203,22 @@ We deploy our lambda function in Virginia Region/us-east-1. This is the endpoint
 
 Create a **auto-replicate-parameter-store** lambda function with the console:
 
-a.- First, be sure you are in us-east-1  (It seems repetive, but it is easy to be in the wrong region and fail to do the pipeline configuration) . In the console click the services tab and look for Lamdba under
-```
-All services > Compute > Lambda or just type lambda in the text box. then hit Lambda
-```
-b.- In the AWS lambda window go to Functions.
-c.- Click the "Create function" buttom.
-d.- You will the following options to create your function Author from scratch, Use blueprint, Container Image, and Browse serverless app repository, choose Author from scratch.
-e.- In Function name type **"auto-replicate-parameter-store"** or any name you choose to, in Runtime look for Python 3.9
-f.- In Permissions - click Change default execution role and select "Use an existing role". In the dialog box that opens up look for **"auto-replicate-parameter-store-role"**, this is the role we created in the previous step.
-g.- Click "Create function" button
-h.- Under Code source > In Environment click `lambda_function.py`
-i.- Delete all existing code an replace it with the code provided in the `auto-replicate-parameter-store.py` file
-j.- Once you paste the new code click "Deploy"
-k.- Click the `Configuration` tab an go to `Environment variables`. 
-l.- In `Environment variables` click `Edit` Button and a new `Edit environment variables` window will open.
-m.- Click `Add environment variable` Next under `Key` type region, and under `Value` type us-west-2,us-east-2 (Notice that when adding different regions we use comma to separate the values and no spaces). Click `Save`
+    a.- First, be sure you are in us-east-1  (It seems repetive, but it is easy to be in the wrong region and fail to do the pipeline configuration) . In the console click the services tab and look for Lamdba under
+    ```
+    All services > Compute > Lambda or just type lambda in the text box. then hit Lambda
+    ```
+    b.- In the AWS lambda window go to Functions.
+    c.- Click the "Create function" buttom.
+    d.- You will the following options to create your function Author from scratch, Use blueprint, Container Image, and Browse serverless app repository, choose Author from scratch.
+    e.- In Function name type **"auto-replicate-parameter-store"** or any name you choose to, in Runtime look for Python 3.9
+    f.- In Permissions - click Change default execution role and select "Use an existing role". In the dialog box that opens up look for **"auto-replicate-parameter-store-role"**, this is the role we created in the previous step.
+    g.- Click "Create function" button
+    h.- Under Code source > In Environment click `lambda_function.py`
+    i.- Delete all existing code an replace it with the code provided in the `auto-replicate-parameter-store.py` file
+    j.- Once you paste the new code click "Deploy"
+    k.- Click the `Configuration` tab an go to `Environment variables`. 
+    l.- In `Environment variables` click `Edit` Button and a new `Edit environment variables` window will open.
+    m.- Click `Add environment variable` Next under `Key` type region, and under `Value` type us-west-2,us-east-2 (Notice that when adding different regions we use comma to separate the values and no spaces). Click `Save`
 
 ![alt text](imagen de creacion de la variables de entorno)
 
@@ -230,42 +230,42 @@ Voila your lambda function is set!
 ### 4. In EventBridge in us-east-1 create a rule and use  as target to replicate entries at moment of creation.
 Create a rule that captures all the parameter store entry creation events in `us-east-1` using `AWS API Call via CloudTrail` and select **auto-replicate-parameter-store** as target in order to automatically replicate the entry at the moment of deployment to whatever regions were set in the `Environment variables` at the lambda function:
 
-a.- Be sure you are in `us-east-1` region 
-b.- At the console screen go to services and type in the text box `"EventBridge"` or under
-```All services > Application Integration > Amazon EventBridge```
-c.- In the Amazon EventBridge menu select Rules and click "Create Rule" button
-d.- Under Name and Description > Name type **"EventPutParameter**"
-e.- Add a Description **"Rule to send parameter store entry creation events to auto-replicate-parameter-store lambda function"** if you choose to, it is optional
-f.- In Define pattern choose ```"Event pattern" > Custom Pattern```
-g.- Copy paste the following json in Event Pattern Text Box
-```json
-{
-  "source": [
-    "aws.ssm"
-  ],
-  "detail-type": [
-    "AWS API Call via CloudTrail"
-  ],
-  "detail": {
-    "eventSource": [
-      "ssm.amazonaws.com"
-    ],
-    "eventName": [
-      "PutParameter"
-    ]
-  }
-}
-```
-... Click "Save"
+    a.- Be sure you are in `us-east-1` region 
+    b.- At the console screen go to services and type in the text box `"EventBridge"` or under
+    ```All services > Application Integration > Amazon EventBridge```
+    c.- In the Amazon EventBridge menu select Rules and click "Create Rule" button
+    d.- Under Name and Description > Name type **"EventPutParameter**"
+    e.- Add a Description **"Rule to send parameter store entry creation events to auto-replicate-parameter-store lambda function"** if you choose to, it is optional
+    f.- In Define pattern choose ```"Event pattern" > Custom Pattern```
+    g.- Copy paste the following json in Event Pattern Text Box
+    ```json
+    {
+      "source": [
+        "aws.ssm"
+      ],
+      "detail-type": [
+        "AWS API Call via CloudTrail"
+      ],
+      "detail": {
+        "eventSource": [
+          "ssm.amazonaws.com"
+        ],
+        "eventName": [
+          "PutParameter"
+        ]
+      }
+    }
+    ```
+    ... Click "Save"
 
-Notice that "PutParameter" is the Event Name that is generated when a new entry is created at the parameter store
+    Notice that "PutParameter" is the Event Name that is generated when a new entry is created at the parameter store
 
-h.- In `Select event bus` section leave it as it is ```Select an event bus`>`AWS default event bus``` 
-i.- In Select` Targets > in Target click the text box, scroll up and select "Lambda Function"`
-j.- In Topic text box select **"auto-replicate-parameter-store"**
-k.- Click `"Create Rule" `button. 
+    h.- In `Select event bus` section leave it as it is ```Select an event bus`>`AWS default event bus``` 
+    i.- In Select` Targets > in Target click the text box, scroll up and select "Lambda Function"`
+    j.- In Topic text box select **"auto-replicate-parameter-store"**
+    k.- Click `"Create Rule" `button. 
 
-![alt text](imagen de creacion de regla desde eventBridge)
+    ![alt text](imagen de creacion de regla desde eventBridge)
 
 
 ### 5. Configure a Schedule Rule that updates Parameter Store Entries set to be replicated across regions based on a fixed rate
