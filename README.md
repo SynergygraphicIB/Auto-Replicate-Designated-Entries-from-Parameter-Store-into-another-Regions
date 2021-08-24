@@ -315,7 +315,7 @@ Let us create a new entry at the Parameter Store set to be replicated:
 
 ![alt text](imagen de entry en el parameter store en virginia....)
 
-13. Now, You will see the same entry replicated at the Paramter Store in us-east-2 and us-west-2
+13. Now, You will see the same entry replicated at the Parameter Store in us-east-2 and us-west-2
 
 ![alt text](imagen de entry en el parameter store en ohio....)
 
