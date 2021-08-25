@@ -14,6 +14,8 @@ import re
 import os
 
 
+
+
 def lambda_handler(event, context):
     
     
@@ -30,6 +32,20 @@ def lambda_handler(event, context):
                 elif (tags["Key"] == "replicate"):
                     return(tags["Value"])
             return False
+        except botocore.exceptions.ClientError as error:
+            print("Boto3 API returned error: ", error)
+            
+            
+    def validate_region(region):
+        try:
+            ec2 = boto3.client('ec2')
+            regions= ec2.describe_regions()
+            region_names = [x["RegionName"] for x in regions["Regions"]]
+            if(region in region_names):
+                return True
+            print("Region no valid")
+            return False
+            
         except botocore.exceptions.ClientError as error:
             print("Boto3 API returned error: ", error)
     
@@ -50,21 +66,22 @@ def lambda_handler(event, context):
                     response = response["Parameter"]
                     
                     for region in regions:
-
-                        ssm_client_replicate =boto3.client('ssm', region_name = region )
                         
-                        if  parameter.get("Description") == None:
-                            parameter["Description"] = "   "
-                        
-                        respuesta = ssm_client_replicate.put_parameter(
-                            Name = parameter.get("Name"),
-                            Description =parameter.get("Description"),
-                            Value = response.get("Value"),
-                            Type = response.get("Type"),
-                            Overwrite = True,
-                            Tier = parameter.get("Tier"),
-                            DataType = parameter.get("DataType")
-                        )
+                        if(validate_region(region)):
+                            ssm_client_replicate =boto3.client('ssm', region_name = region )
+                            
+                            if  parameter.get("Description") == None:
+                                parameter["Description"] = "   "
+                            
+                            respuesta = ssm_client_replicate.put_parameter(
+                                Name = parameter.get("Name"),
+                                Description =parameter.get("Description"),
+                                Value = response.get("Value"),
+                                Type = response.get("Type"),
+                                Overwrite = True,
+                                Tier = parameter.get("Tier"),
+                                DataType = parameter.get("DataType")
+                            )
 
 
         except botocore.exceptions.ClientError as error:
@@ -73,36 +90,28 @@ def lambda_handler(event, context):
         event=event["detail"]
         
         try:
-            ec2 = boto3.client('ec2')
-            regions= ec2.describe_regions()
-
-            region_names = [x["RegionName"] for x in regions["Regions"]]
+            regions= os.environ['region']
+            regions= regions.strip(" ")
+            regions= regions.split(",")
             
-
-            tags = event["requestParameters"]["tags"]
             
-            for tag in tags:
-                if (tag["key"] == "replicate"):
-                    regions=tag["value"].split(",")
-
-            
-            for  r in regions:
+            for region in regions:
                 
-                ssm_client_replicate =boto3.client('ssm', region_name = r )
+                if(validate_region(region)):
+                    ssm_client_replicate =boto3.client('ssm', region_name = region )
                 
-                requestParameters = event["requestParameters"] 
-                if  requestParameters.get("description") == None:
-                   requestParameters["description"] = "   "
-                
-                response = ssm_client_replicate.put_parameter(
-                    Name = requestParameters.get("name"),
-                    Description =requestParameters.get("description"),
-                    Value = requestParameters.get("value"),
-                    Type = requestParameters.get("type"),
-                    Overwrite = True,
-                    Tier = requestParameters.get("tier"),
-                    DataType = requestParameters.get("dataType")
-                )
+                    requestParameters = event["requestParameters"] 
+                    if  requestParameters.get("description") == None:
+                       requestParameters["description"] = "   "
+                    response = ssm_client_replicate.put_parameter(
+                        Name = requestParameters.get("name"),
+                        Description =requestParameters.get("description"),
+                        Value = requestParameters.get("value"),
+                        Type = requestParameters.get("type"),
+                        Overwrite = True,
+                        Tier = requestParameters.get("tier"),
+                        DataType = requestParameters.get("dataType")
+                    )
         except botocore.exceptions.ClientError as error:
             print("Boto3 API returned error: ", error)
 
