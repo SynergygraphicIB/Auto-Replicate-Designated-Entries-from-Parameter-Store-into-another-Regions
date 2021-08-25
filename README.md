@@ -5,9 +5,11 @@ Hence an Entry created in a central parameter store, say in US-EAST-1, it is rep
 ### PreFlight Check
 1. Intermedial to advance level in Python. So, you can adapt and customized the `auto-replicate-parameter-store.py` files to your need an use cases.
 2. Basic to intermedial level in json to edit json rules in `EventBridge Rules` to modify it if needed to your use case, since we give granular limited access to AWS resources.
-3. One AWS Region known as the "the Master Region"* to deploy the entries at the Parameter Store to be replicated. Here is where we deploy **auto-replicate-parameter-store** lambda function as well.
-6. In the designated Central Region you choose for the Parameter Store Entries you will need the following
-    A. `Eventbridge` rules in the central region in order to pass the "PutParameter" events from `cloudtrail` to the lambda function as an endpoint.
+3. One AWS Region known as the "the Master Region"* to deploy the entries at the Parameter Store to be replicated. 
+4. In the Master Region you choose for the Parameter Store Entries you will need the following
+    - An `Eventbridge` rule in the master region in order to pass the "PutParameter" events from `cloudtrail` to the lambda function as an endpoint.
+    - An `Eventbridge` rule in the master region in order to schedule a scan on entries in the parameter store that are to be replicated and whose values may have changed.
+    - A `Lambda Function` called **auto-replicate-parameter-store** as an endpoint to the rules created in `Eventbridge`.
 
 ## List of AWS Resources used in the Auto Replicate Parameter Entries workflow
 1. IAM
@@ -15,7 +17,7 @@ Hence an Entry created in a central parameter store, say in US-EAST-1, it is rep
 3. CloudWatch
 4. CloudTrail
 5. SSM Parameter Store
-6. Key Management Service
+6. Key Management Service (KMS)
 
 ## List of Programming languages used
 1. Python 3.9
