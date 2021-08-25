@@ -1,5 +1,5 @@
 # Replicate Parameter Store Entries into another Regions using an automated workflow:
-This is an open-source solution to deploy **AutoReplication** of Parameter Store Entries using `CloudTrail` to route the deployment event through `Cloudwatch Events`, and `EventBrigdge`,` across regions if it is the case to an endpoint - a `lambda function` to `replicate parameter entries` at the moment of creation or thru a scheduled event in CloudWatch which rewrites the value. 
+This is an open-source solution to deploy **AutoReplication** of Parameter Store Entries using `CloudTrail` to route the deployment event through `Cloudwatch Events`, and `EventBrigdge`,` across regions if it is the case to an endpoint` a `lambda function` to replicate parameter entries at the moment of creation or thru a scheduled event in CloudWatch which rewrites the value. 
 Hence an Entry created in a central parameter store, say in US-EAST-1, it is replicated in US-EAST-2. If it is already in existence in US-EAST-2 then it is updated.
 
 ### PreFlight Check
