@@ -119,7 +119,7 @@ Log in to Account ID 111111111111. This is the account number we are going to us
 2. In `Key Management Service` (KMS) menu > go to `AWS managed keys` and click `"aws/ssm"` Under AWS managed keys list
 3. In General Configuration copy and save the Key ARN. For the purposes of this example the Key ID is "arn:aws:kms:us-east-1:111111111111:key/75fcc799-de1b-42c7-9a12-a23b31111111111"
 
-![alt text](imagen de KMS con vainas difuminadas que no se vean)
+![alt text](https://github.com/SynergygraphicIB/Auto-Replicate-Designated-Entries-from-Parameter-Store-into-another-Regions/blob/main/img/1.jfif?raw=true)
 
 ### 2. Setting up the Lamdba Role **auto-replicate-parameter-store-role**
 
