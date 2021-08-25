@@ -176,7 +176,7 @@ Log in to Account ID 111111111111. This is the account number we are going to us
 6. In Review policy window in Name type **"policy.json"**
 7. In Description type "Rule to enable **auto-replicate-parameter-store-role** Rule to replicate parameter store entries" and click "Create policy". 
 
-**Note** Under Resource...
+**Note** Under Resource replace the KMS Key arn and the Account number wherever applicable
 
 ```json
             "Resource": [
@@ -184,8 +184,6 @@ Log in to Account ID 111111111111. This is the account number we are going to us
                 "arn:aws:ssm:*:111111111111:parameter/*"
             ]
 ```
-                
- ... replace the KMS Key arn and the Account number wherever applicable
         
 ![alt text](https://github.com/SynergygraphicIB/Auto-Replicate-Designated-Entries-from-Parameter-Store-into-another-Regions/blob/main/img/2.jfif?raw=true)
 
