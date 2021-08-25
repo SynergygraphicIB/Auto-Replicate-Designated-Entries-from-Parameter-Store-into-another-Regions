@@ -23,10 +23,11 @@ Hence an Entry created in a central parameter store, say in US-EAST-1, it is rep
 1. Python 3.9
 
 ## Required IAM Roles and Policies
-In this case `Identity and Access Management (IAM)` is a global element, so do not worry in what region you are in at the moment of loggin in. Though some AWS Services are global like this one and `S3` some others like `EventBridge`, `CloudWatch`, and `Lambda` is regional; therefore, be sure you are in us-east-1 (N. Virginia) for most of the purposes of this project. 
-We need one role **auto-replicate-parameter-store-role** with limited granular permissions to interact with other AWS Services such as: IAM, KMS, EC2, SSM, CloudWatch Logs for this project
+In this case `Identity and Access Management (IAM)` is a global element, so do not worry about what region you are in at the moment of logging in. However, though some AWS Services are global like this one and `S3`, some others like `EventBridge`, `CloudWatch`, and `Lambda` are regional. Therefore, be sure you are in us-east-1 (N. Virginia) for most of the purposes of this project. 
+We need one role **auto-replicate-parameter-store-role** with limited granular permissions to interact with other AWS Services such as: KMS, EC2, SSM, and CloudWatch Logs for this project
 
-And we need to attach the following policy to the role
+Create and Attach the following policy to the role **auto-replicate-parameter-store-role**
+
 **policy.json** - IAM Policy to authorize *auto-replicate-parameter-store-role* to replicate Parameter Store Entries
 See `policy.json`
 or copy paste from here...
@@ -67,7 +68,7 @@ or copy paste from here...
     ]
 }
 ```
-### Amazon EventBridge and CloudWatch
+### Amazon EventBridge
 **EventRule.json** - This rule filters create or launch events coming from `AWS API Call via CloudTrail` that start with the event name "PutParameter" which is the one create Paramter Store entries.
 See `EventRule.json`
 or copy paste from here...
@@ -94,8 +95,10 @@ or copy paste from here...
 Note: sometimes when creating complex custom rules such as when using prefix feature it is necessary to create them in EventBridge or to update the very same rules. If it is done CloudWatch directly it may not not work. Hence, we best configure the rules in EventBridge even though the end result is also shown in CloudWatch. 
 
 ### AWS Lambda
-
 **auto-replicate-parameter-store** - Lambda function that we deploy in the *Designated Region* or in our case the us-east-1 region to replicate . It is triggered by a "PutParameter" coming from CloudWatch. 
+
+### Key Managment Service
+We wil use the Default aws/ssm arn key to secure our project further
 
 ### Let us check this solution's architecture and workflow
 A Parameter Store Entry is deployed either by using the console or the AWS SDK for Python (Boto3). Yet, all replication is going to be done by the **auto-replicate-parameter-store** lambda function in us-east-1. The New Parameter Store Entry with the tag replicate/yes or replicate/us-east-2 generates an event metadata; the timestamp, who was the creator, ARN of the creator, etc, but the one we really need is the tag containing the key/value pair = replicate/yes.
@@ -106,9 +109,7 @@ Thus, the lambda function checks if the value of replicate tag is set to yes. If
 
 In Summary, The purpose of this pipeline is to centralize the control Parameter Store Entries from a centralized Parameter Store in a designated Region. In this way is easier to manage and monitor entries that are to be used across regions it the Parameter Store
 
-### Key Managment Service
 
-We wil use the Default aws/ssm arn key to secure our project further
 
 
 ## Steps to Create the Pipeline to do the Auto-Replicate Parameter Store
