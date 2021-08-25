@@ -5,7 +5,7 @@ Hence an Entry created in a central parameter store, say in US-EAST-1, it is rep
 ### PreFlight Check
 1. Intermedial to advance level in Python. So, you can adapt and customized the `auto-replicate-parameter-store.py` files to your need an use cases.
 2. Basic to intermedial level in json to edit json rules in `EventBridge Rules` to modify it if needed to your use case, since we give granular limited access to AWS resources.
-3. One AWS Region known as the "the Central or *Receiver Region"* to deploy the parameters to be replicated. Here is where we deploy **auto-replicate-parameter-store**.
+3. One AWS Region known as the "the Master Region"* to deploy the entries at the Parameter Store to be replicated. Here is where we deploy **auto-replicate-parameter-store** lambda function as well.
 6. In the designated Central Region you choose for the Parameter Store Entries you will need the following
     A. `Eventbridge` rules in the central region in order to pass the "PutParameter" events from `cloudtrail` to the lambda function as an endpoint.
 
