@@ -189,7 +189,7 @@ Log in to Account ID 111111111111. This is the account number we are going to us
 
 #### 2.2 Create "auto-replicate-parameter-store-role"
 
-1. Be sure you are in `Account 111111111111`
+1. Let us go to IAM 
 2. At the console screen go to services and type in the text box `"IAM"` or under All services > Security, Identity, & Compliance > IAM
 3. In Create Role window > Under "Select type of trusted entity" keep AWS service as your choice
 4. In "Choose a use case" select "Lambda" and click "Next: Permissions" button
