@@ -196,8 +196,8 @@ Log in to Account ID 111111111111. This is the account number we are going to us
 5. In next window, under Attach Permissions policies click Filter policies and checkmark "Customer managed"
 6. Scroll down and checkmark the Customer managed policy **"policy.json"**
 7.  Click "Next:Tags" button and click "Next: Review" button too
-8. Under Review, in Role name `*` type **"auto-replicate-parameter-store-role"** 
-9. In Role description type "Resource Role to replicate parameter store entries" 
+8. Under Review, in `Role name *` type **"auto-replicate-parameter-store-role"** 
+9. In `Role description` type "Resource Role to replicate parameter store entries" 
     Observe that in Trusted entities you got AWS service: lambda.amazonaws.com and the recently created policy attached to the role
 10. Click "Create Role Button"
 
