@@ -184,7 +184,7 @@ Log in to Account ID 111111111111. This is the account number we are going to us
                 
  ... replace the KMS Key arn and the Account number wherever applicable
         
-![alt text](imagen)
+![alt text](https://github.com/SynergygraphicIB/Auto-Replicate-Designated-Entries-from-Parameter-Store-into-another-Regions/blob/main/img/2.jfif?raw=true)
 
 #### 2.2 Create "auto-replicate-parameter-store-role"
 
@@ -200,7 +200,7 @@ Log in to Account ID 111111111111. This is the account number we are going to us
     Observe that in Trusted entities you got AWS service: lambda.amazonaws.com and the recently created policy attached to the role
 10. Click "Create Role Button"
 
-![alt text](Imagen de Role auto-replicate-parameter-store-role siendo creado)
+![alt text](https://github.com/SynergygraphicIB/Auto-Replicate-Designated-Entries-from-Parameter-Store-into-another-Regions/blob/main/img/3.jfif?raw=true)
 
 
 ### 3. Deploy auto-replicate-parameter-store Lambda Function in us-east-1
@@ -226,11 +226,11 @@ All services > Compute > Lambda or just type lambda in the text box. then hit La
 12. In `Environment variables` click `Edit` Button and a new `Edit environment variables` window will open.
 13. Click `Add environment variable` Next under `Key` type region, and under `Value` type us-west-2,us-east-2 (Notice that when adding different regions we use comma to separate the values and no spaces). Click `Save`
 
-![alt text](imagen de creacion de la variables de entorno)
+![alt text](https://github.com/SynergygraphicIB/Auto-Replicate-Designated-Entries-from-Parameter-Store-into-another-Regions/blob/main/img/4.jfif?raw=true)
 
 Voila your lambda function is set!
 
-![alt text](imagen de creacion de lambda)
+![alt text](https://github.com/SynergygraphicIB/Auto-Replicate-Designated-Entries-from-Parameter-Store-into-another-Regions/blob/main/img/5.jfif?raw=true)
 
 
 ### 4. In EventBridge in us-east-1 create a rule and use  as target to replicate entries at moment of creation.
@@ -271,7 +271,7 @@ Notice that "PutParameter" is the Event Name that is generated when a new entry 
 10. In Topic text box select **"auto-replicate-parameter-store"**
 11. Click `"Create Rule" `button. 
 
-![alt text](imagen de creacion de regla desde eventBridge)
+![alt text](https://github.com/SynergygraphicIB/Auto-Replicate-Designated-Entries-from-Parameter-Store-into-another-Regions/blob/main/img/6.jfif?raw=true)
 
 
 ### 5. Configure a Schedule Rule that updates Parameter Store Entries set to be replicated across regions based on a fixed rate
@@ -291,7 +291,7 @@ Notice that "PutParameter" is the Event Name that is generated when a new entry 
 10. In Topic text box select **"auto-replicate-parameter-store"**
 11. Click `"Create Rule" `button. 
 
-![alt text](imagen de creacion de regla SCHEDULE desde eventBridge)
+![alt text](https://github.com/SynergygraphicIB/Auto-Replicate-Designated-Entries-from-Parameter-Store-into-another-Regions/blob/main/img/7.jfif?raw=true)
 
 Note: The Fixed Rate you set determines how many times the parameter store will be updated per day
 
@@ -313,11 +313,11 @@ Let us create a new entry at the Parameter Store set to be replicated:
 11 In ```Tags ``` click `Add tag` 
 12. In ```Key``` text box type `replicate`, and in ```Value``` text box type `yes` and click ```Create parameter```
 
-![alt text](imagen de entry en el parameter store en virginia....)
+![alt text](https://github.com/SynergygraphicIB/Auto-Replicate-Designated-Entries-from-Parameter-Store-into-another-Regions/blob/main/img/8.jfif?raw=true)
 
 13. Now, You will see the same entry replicated at the Parameter Store in us-east-2 and us-west-2
 
-![alt text](imagen de entry en el parameter store en ohio....)
+![alt text](https://github.com/SynergygraphicIB/Auto-Replicate-Designated-Entries-from-Parameter-Store-into-another-Regions/blob/main/img/9.jfif?raw=true)
 
 
 **Note: To implement the replication in other regions, repeat modify the "Environment Variable > region" of the lambda function as applicable in your project**
